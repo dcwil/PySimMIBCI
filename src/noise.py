@@ -297,8 +297,8 @@ def add_exg(raw, kind, head_pos, interp, n_jobs, random_state):
         while timeNow < endTime:
             nextTime = timeNow + (-np.log(1-rng.uniform()))/eventFreq
             if nextTime < endTime:
-                event_latency = np.int(nextTime*info['sfreq'])
-                event_duration = np.int(np.random.uniform() * randomMaxduration
+                event_latency = int(nextTime*info['sfreq'])
+                event_duration = int(np.random.uniform() * randomMaxduration
                                         / 1000 * info['sfreq'])
                 timeline[event_latency:event_latency+event_duration] = 1
             timeNow = nextTime
