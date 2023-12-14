@@ -201,8 +201,7 @@ def generate_what_failed(MI_tasks, events, user_params, MI_duration, sfreq,
     bad_trials_vector = np.zeros(np.size(events, 0))
     rng = np.random.default_rng()
     # Select only MI positions (not rest)
-    MI_positions = np.logical_or(events[:, 2] == 1, events[:, 2] == 2).nonzero(
-        )[0]
+    MI_positions = np.logical_or(events[:, 2] == 0, events[:, 2] == 1).nonzero()[0]
     MI_positions_failed = rng.choice(MI_positions, int(p_failed*N_trials/2))
     bad_trials_vector[MI_positions_failed] = 1
 
@@ -304,10 +303,14 @@ def generate_when(events_info, N_trials, sfreq, include_rest=False,
 
     """
     N_classes = len(events_info)
-    trials_ID = repmat(np.arange(start=1, stop=N_classes+1),
+    trials_ID = repmat(np.arange(start=0, stop=N_classes),
                        1, int(N_trials/N_classes))
     trials_ID = np.transpose(trials_ID)[:, 0]
     trials_ID = np.random.permutation(trials_ID)
+    
+    # class labels will 0 to (N_classes - 1)
+    # baseline label will be N_classes
+    # rest label will be N_classes + 1
 
     cnt = 0
     current_time = 0
@@ -325,7 +328,7 @@ def generate_when(events_info, N_trials, sfreq, include_rest=False,
 
     if include_baseline:
         events[cnt, 0] = int(current_time)
-        events[cnt, 2] = int(N_classes+1)  # rest ID
+        events[cnt, 2] = int(N_classes)  # rest ID
         duration_tmp = round(baseline_duration/1000*sfreq)
         current_time += duration_tmp
         cnt += 1
@@ -333,7 +336,7 @@ def generate_when(events_info, N_trials, sfreq, include_rest=False,
     for i, event_ID in enumerate(trials_ID):
         events[cnt, 0] = int(current_time)
         events[cnt, 2] = int(event_ID)
-        number = events_info[event_ID-1]['duration']/1000*sfreq
+        number = events_info[event_ID]['duration']/1000*sfreq
         duration_tmp = round(number)
 
         current_time += duration_tmp
@@ -341,7 +344,7 @@ def generate_when(events_info, N_trials, sfreq, include_rest=False,
 
         if include_rest:
             events[cnt, 0] = int(current_time)
-            events[cnt, 2] = int(N_classes+1)
+            events[cnt, 2] = int(N_classes + 1)
             duration_tmp = round(rest_duration/1000*sfreq)
             current_time += duration_tmp
             cnt += 1
@@ -635,6 +638,7 @@ def save_mat_simulated_data(raw, events, spath, fname):
     None.
 
     """
+    print("WARNING: this hasn't been updated to the new class labels!!")
     # Save signals in .mat
     raw_data = raw.get_data().T
     pos = events[:, 0]
